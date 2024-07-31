@@ -1,0 +1,70 @@
+apply plugin: 'com.android.library'
+apply plugin: 'maven-publish'
+
+// version to be published
+def getVersionName = { ->
+    if (project.hasProperty("version")) {
+        return project.getProperty("version")
+    }
+}
+
+// debugging env vars
+def getEnv = { ->
+    println "GH_REPO: " + System.getenv("GH_REPO")
+    println "GH_USER: " + System.getenv("GH_USER")
+}
+
+task debugProps(){
+    getEnv()
+    getVersionName()
+}
+
+task sourceJar(type: Jar) {
+    archiveClassifier.set("sources")
+    from android.sourceSets.main.java.srcDirs
+}
+
+def getLocalProperties() {
+    Properties local = new Properties()
+    def propsFile = rootProject.file('local.properties')
+    local.load(new FileInputStream(propsFile))
+
+    return local
+}
+
+publishing {
+    publications {
+        bar(MavenPublication) {
+            groupId "com.unity3d"
+            artifactId "player"
+            version getVersionName()
+
+            artifact("$buildDir/outputs/aar/unityLibrary-release.aar")
+            artifact(sourceJar)
+
+            pom {
+                name = "player - mazda"
+                description = "Unity as Android Library"
+                developers {
+                    developer {
+                        id = "unityteam"
+                        name = "Unity Team"
+                        email = "team@unity3d.com"
+                    }
+                }
+            }
+        }
+    }
+
+    repositories {
+        maven {
+            name = "GitHubPackages"
+
+            url = uri(getLocalProperties()['gpr.repo'] ?: System.getenv("GH_REPO"))
+            credentials {
+                username = getLocalProperties()['gpr.usr'] ?: System.getenv("GH_USER")
+                password = getLocalProperties()['gpr.key'] ?: System.getenv("GH_TOKEN")
+            }
+        }
+    }
+}

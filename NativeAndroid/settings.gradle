@@ -1,0 +1,55 @@
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        google()
+        mavenCentral()
+    }
+}
+
+rootProject.name = "CustomNative"
+include ':app'
+
+
+// read local properties
+Properties properties = new Properties()
+File propertiesFile = new File('local.properties')
+
+propertiesFile.withInputStream {
+    properties.load(it)
+}
+
+// for building unity as a library locally only
+if (properties["localdev"] == 'true') {
+    include ':unityLibrary'
+    project(':unityLibrary').projectDir=new File(properties["android.build.path"])
+}
+
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
+
+    if (properties["localdev"] == 'true') {
+        repositories {
+            google()
+            mavenCentral()
+            flatDir {
+                dirs "${project(':unityLibrary').projectDir}/libs"
+            }
+        }
+    } else {
+        repositories {
+            google()
+            mavenCentral()
+            maven {
+                name = "GitHubPackages"
+
+                url = uri(properties['gpr.repo'] ?: System.getenv("GH_REPO"))
+
+                credentials {
+                    username = properties['gpr.usr'] ?: System.getenv("GH_USER")
+                    password = properties['gpr.key']  ?: System.getenv("GH_TOKEN")
+                }
+            }
+        }
+    }
+}

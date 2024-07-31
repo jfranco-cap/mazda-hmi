@@ -1,0 +1,23 @@
+{
+  "name": "mazda-hmi",
+  "packageManager": "pnpm@8.6.12",
+  "devDependencies": {
+    "@commitlint/cli": "^17.7.2",
+    "@commitlint/config-conventional": "^17.7.0",
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/commit-analyzer": "^9.0.2",
+    "@semantic-release/git": "^10.0.1",
+    "@semantic-release/github": "^8.1.0",
+    "@semantic-release/release-notes-generator": "^10.0.3",
+    "dotenv-cli": "^7.3.0",
+    "husky": "^8.0.3",
+    "semantic-release": "^22.0.5",
+    "semantic-release-monorepo": "^7.0.5"
+  },
+  "scripts": {
+    "with-env": "dotenv -e .env --",
+    "prepare": "husky install",
+    "release:all": "pnpm -r --workspace-concurrency=1 exec -- semantic-release -e semantic-release-monorepo --branches 'main,feat/test-pipeline' --plugins '@semantic-release/commit-analyzer,@semantic-release/release-notes-generator,@semantic-release/changelog,@semantic-release/git,@semantic-release/github'",
+    "release:dry:all": "pnpm with-env pnpm -r --workspace-concurrency=1 exec -- semantic-release --dry-run --no-ci -e semantic-release-monorepo --branches 'main,feat/test-pipeline' --plugins '@semantic-release/commit-analyzer,@semantic-release/release-notes-generator,@semantic-release/changelog,@semantic-release/git'"
+  }
+}

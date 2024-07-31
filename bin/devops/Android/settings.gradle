@@ -1,0 +1,34 @@
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        google()
+        mavenCentral()
+    }
+}
+
+include ':app'
+
+
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
+    repositories {
+        google()
+        mavenCentral()
+        maven {
+            Properties properties = new Properties()
+            File propertiesFile = new File('local.properties')
+            propertiesFile.withInputStream {
+                properties.load(it)
+            }
+
+            name = "GitHubPackages"
+
+            url = uri(properties['gpr.repo'] ?: System.getenv("GH_REPO"))
+
+            credentials {
+                username = properties['gpr.usr'] ?: System.getenv("GH_USER")
+                password = properties['gpr.key']  ?: System.getenv("GH_TOKEN")
+            }
+        }
+    }
+}

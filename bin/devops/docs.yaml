@@ -1,0 +1,106 @@
+# # TODO: https://stackoverflow.com/questions/60355925/share-artifacts-between-workflows-github-actions
+# # TODO: https://forum.unity.com/threads/linux-editor-stuck-on-loading-because-of-bee_backend-w-workaround.1166347/
+# # TODO: https://stackoverflow.com/questions/58136102/deploy-individual-services-from-a-monorepo-using-github-actions
+# name: "Build and store UAAL Artifact (WIP)"
+
+# # TODO: add workflow deps
+# # on:
+# #   workflow_run:
+# #     workflows: [commitlint]
+# #     types:
+# #       - completed
+# on:
+#   push:
+#     branches:
+#       - main
+#       # TODO: delete after testing
+#       - feat/ci
+#       - feat/test-pipeline
+#     # paths:
+#     #   - 'MazdaIVI/**'
+#   pull_request:
+#     branches:
+#       - main
+#       # TODO: delete after testing
+#       - feat/ci
+#       - feat/test-pipeline
+#     # paths:
+#     #   - 'MazdaIVI/**'
+
+# permissions:
+#   contents: write
+
+# jobs:
+#   build_unity_library:
+#     # if: contains(github.event.head_commit.modified, 'UnityProject/')
+#     runs-on: [ self-hosted, Linux, X64 ]
+#     container: unityci/editor:ubuntu-2022.3.5f1-android-2
+#     steps:
+#       # unityci image doesn't have node installed and it's needed for github actions
+#       - name: Setup node js
+#         run: |
+#           apt-get -qq update && apt-get -qq -o=Dpkg::Use-Pty=0 --no-install-recommends install gnupg1
+#           echo 'deb http://ppa.launchpad.net/git-core/ppa/ubuntu bionic main' > /etc/apt/sources.list.d/git.list
+#           apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E1DD270288B4E6030699E45FA1715D88E1DF1F24
+#           apt-get -qq update && apt-get install -qq -o=Dpkg::Use-Pty=0 --no-install-recommends git
+
+#       - uses: actions/checkout@v3
+#         with:
+#           lfs: true
+
+#       - uses: actions/download-artifact@v3
+#         with:
+#           name: my-artifact
+#           path: path/to/artifact
+
+#       - name: Display structure of downloaded files
+#         run: ls -R
+#         working-directory: path/to/artifact
+
+#       # TODO: pass it to a separate job
+#       # 1. install gradle (has to be inside unity editor container because that is where all sdks are installed)
+#       # 2. copy build.uaal.gradle to the generated unityLibrary (this way we can add new configuration without changing the original build.gradle)
+#       # 3. add build.uaal.gradle import to build.gradle (add an apply statement at the top of the file)
+#       # 4. build unityLibrary so that it generates the aar file
+#       # 5. publish unityLibrary aar files to maven repository
+#       - name: Build & Publish Android Library
+#         env:
+#           GH_REPO: ${{ secrets.GH_REPO }}
+#           GH_USER: ${{ secrets.GH_USER }}
+#           GH_API_KEY: ${{ secrets.GH_API_KEY }}
+#           ANDROID_CMDLINE_TOOLS_PATH: /opt/unity/Editor/Data/PlaybackEngines/AndroidPlayer/SDK/cmdline-tools/6.0
+#           ANDROID_SDK_ROOT: /opt/unity/Editor/Data/PlaybackEngines/AndroidPlayer/SDK
+#           ANDROID_HOME: /opt/unity/Editor/Data/PlaybackEngines/AndroidPlayer/SDK
+#           ANDROID_NDK_HOME: /opt/unity/Editor/Data/PlaybackEngines/AndroidPlayer/NDK
+#           JAVA_HOME: /opt/unity/Editor/Data/PlaybackEngines/AndroidPlayer/OpenJDK
+#         run: |
+#           wget -c https\://services.gradle.org/distributions/gradle-7.2-bin.zip -P /tmp
+#           unzip -d /opt/gradle /tmp/gradle-7.2-bin.zip
+#           chmod +x /opt/gradle/gradle-7.2/bin/gradle
+#           cp bin/devops/Android/build.uaal.gradle MazdaIVI/androidBuild/unityLibrary/build.uaal.gradle
+#           sed -i "1s/^/apply from: 'build.uaal.gradle'\n/" MazdaIVI/androidBuild/unityLibrary/build.gradle
+#           /opt/gradle/gradle-7.2/bin/gradle build --daemon -p MazdaIVI/androidBuild
+#           /opt/gradle/gradle-7.2/bin/gradle publish --daemon -p MazdaIVI/androidBuild -Pversion=0.0.2
+
+#       - name: Zip compression
+#         run: |
+#           zip -r androidBuild.zip MazdaIVI/androidBuild/*
+
+#       - uses: actions/upload-artifact@v3
+#         with:
+#           # TODO: add versioning
+#           name: androidBuild
+#           path: androidBuild.zip
+#           # we don't need this after the maven package is published but we keep it for a week just in case
+#           retention-days: 7
+#           if-no-files-found: error
+
+#       - name: Return License
+#         if: always()
+#         continue-on-error: true
+#         env:
+#           UNITY_USERNAME: ${{ secrets.UNITY_USERNAME }}
+#           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+#           UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
+#         run: |
+#           unity-editor -quit -batchmode -returnlicense -username $UNITY_USERNAME -password $UNITY_PASSWORD

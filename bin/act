@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+
+# Please Use Google Shell Style: https://google.github.io/styleguide/shell.xml
+
+# ---- Start unofficial bash strict mode boilerplate
+# http://redsymbol.net/articles/unofficial-bash-strict-mode/
+set -o errexit  # always exit on error
+set -o errtrace # trap errors in functions as well
+set -o pipefail # don't ignore exit codes when piping output
+set -o posix    # more strict failures in subshells
+# set -x          # enable debugging
+
+cd "$(dirname "${BASH_SOURCE[0]}")/.."
+
+# act -j build_unity_library --secret-file .env -e bin/event.json
+act workflow_dispatch -j commitlint --secret-file .env -e bin/event.json
+# act -j build_unity_library --container-architecture linux/amd64 --secret-file .env -e bin/event.json
+# # Run a specific action:
+# act -t test
+# docker run --rm -it --platform linux/amd64 --env-file .env -v .:/home -w /home unityci/editor:ubuntu-2022.3.14f1-android-3
+
+# executing Unity build
+/Applications/Unity/Hub/Editor/2022.3.5f1/Unity.app/Contents/MacOS/Unity -quit -batchmode -projectPath /Users/sebastian.franco/mazda-hmi/ind-mazda-hmi-prod-ivi/MazdaIVI -executeMethod BuildScript.BuildUAAL -logfile /Users/sebastian.franco/mazda-hmi/ind-mazda-hmi-prod-ivi/logs.txt
+
+# find . -type f -exec chmod 755 {} \;

@@ -1,0 +1,14 @@
+{
+  "inputs": {
+    "artifact_name": "UAAL"
+  },
+  "act": true,
+  "push": {
+    "head": {
+      "ref": "sample-head-ref"
+    },
+    "base_ref": {
+      "ref": "sample-base-ref"
+    }
+  }
+}
