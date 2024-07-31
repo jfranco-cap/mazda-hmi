@@ -1,0 +1,28 @@
+name: Publish Workflow
+
+on:
+  create:
+    tags:
+      - 'unity-v[0-9]+.[0-9]+.[0-9]+'
+      - 'android-v[0-9]+.[0-9]+.[0-9]+'
+
+concurrency:
+  group: ${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  publish_unity_library:
+    name: Build Unity Library - Artifact
+    if: github.ref_type == 'tag' && contains(github.ref_name, 'unity')
+    uses: ./.github/workflows/build_uaal.yaml
+    with:
+      tag: ${{github.ref_name}}
+      publish: true
+    secrets:
+      UNITY_USERNAME: ${{ secrets.UNITY_USERNAME }}
+      UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+      UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
+      GH_REPO: ${{ secrets.GH_REPO }}
+      GH_USER: ${{ secrets.GH_USER }}
+
+# TODO: add publish Android Project

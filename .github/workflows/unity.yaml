@@ -1,0 +1,20 @@
+name: Unity workflow
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - 'MazdaIVI/**'
+
+jobs:
+  build_unity_library:
+    name: Build Unity Library - Artifact
+    uses: ./.github/workflows/build_uaal.yaml
+    with:
+      tag: ${{github.ref_name}}
+      publish: false
+    secrets:
+      UNITY_USERNAME: ${{ secrets.UNITY_USERNAME }}
+      UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+      UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
+

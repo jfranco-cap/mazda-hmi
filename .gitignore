@@ -1,0 +1,7 @@
+.DS_Store
+.env
+androidBuild/*
+node_modules/*
+node_modules
+.vscode
+logs.txt
